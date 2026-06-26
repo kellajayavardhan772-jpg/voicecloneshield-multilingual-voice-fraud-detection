@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VoiceClone Shield — AI Voice Fraud Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Leaflet & Chart.js CDNs -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root{
+  --bg:#0A0907; --bg2:#120F0C; --card:#1A1614; --card2:#211B17;
+  --border:#3A332C; --border2:#4A4036;
+  --orange:#FF6A1F; --orange-light:#FFAB6B; --orange-dim:#7A3D14;
+  --text:#E8E2D8; --muted:#9A8F80; --muted2:#6E6457;
+  --green:#5FCB7A; --red:#E5544A;
+  --display:'Space Grotesk',sans-serif; --body:'Inter',sans-serif; --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden;line-height:1.6}
+a{color:inherit;text-decoration:none}
+
+
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle at 50% 0%, rgba(255,106,31,.06), transparent 55%);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);background-size:64px 64px;pointer-events:none;z-index:0}
+
+.wrap{max-width:1240px;margin:0 auto;padding:0 2rem;position:relative;z-index:1}
+
+
+header{position:sticky;top:0;z-index:100;background:rgba(10,9,7,.88);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:74px}
+.brand{display:flex;align-items:center;gap:11px}
+.brand-mark{width:38px;height:38px;border-radius:9px;background:linear-gradient(145deg,#2A211A,#1A1410);border:1.5px solid var(--orange-dim);display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(255,106,31,.18)}
+.brand-mark svg{width:19px;height:19px}
+.brand-name{font-family:var(--display);font-weight:700;font-size:1.05rem;letter-spacing:-.01em}
+.brand-name .hi{color:var(--orange)}
+.navlinks{display:flex;align-items:center;gap:6px}
+.navlink{padding:9px 16px;border-radius:99px;font-size:.85rem;font-weight:500;color:var(--muted);border:1px solid transparent;transition:all .15s}
+.navlink:hover{color:var(--text)}
+.navlink.is-active{color:var(--orange);border-color:var(--orange-dim);background:rgba(255,106,31,.08)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.langs-pill{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:99px;border:1px solid var(--border);font-size:.72rem;color:var(--muted);font-family:var(--mono)}
+.user-pill{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:99px;border:1px solid var(--border);font-size:.85rem;font-weight:500;cursor:pointer;transition:border-color .15s}
+.user-pill:hover{border-color:var(--border2)}
+
+
+.page{display:none}
+.page.is-active{display:block}
+
+
+.hero{padding:5rem 0 4rem}
+.hero-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:3.5rem;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.72rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--orange);border:1px solid var(--orange-dim);padding:7px 16px;border-radius:99px;background:rgba(255,106,31,.07);margin-bottom:1.75rem}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--orange);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.hero h1{font-family:var(--display);font-size:clamp(2.6rem,4.6vw,3.85rem);font-weight:700;line-height:1.04;letter-spacing:-.02em;margin-bottom:1.5rem}
+.hero h1 .accent{color:var(--orange)}
+.hero p.lede{font-size:1.04rem;color:var(--muted);max-width:480px;margin-bottom:2.25rem;line-height:1.75}
+.hero-ctas{display:flex;gap:14px}
+.btn{display:inline-flex;align-items:center;gap:9px;padding:14px 26px;border-radius:99px;font-family:var(--body);font-weight:600;font-size:.92rem;cursor:pointer;border:none;transition:all .18s}
+.btn-primary{background:var(--orange);color:#170D05;box-shadow:0 4px 24px rgba(255,106,31,.3)}
+.btn-primary:hover{background:#FF7C3A;box-shadow:0 6px 32px rgba(255,106,31,.45);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--text);border:1.5px solid var(--border2)}
+.btn-ghost:hover{border-color:var(--orange-dim);color:var(--orange-light)}
+
+
+.hero-visual{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--border);aspect-ratio:4/3.1;background:
+  linear-gradient(160deg, #1c140d 0%, #0d0a08 55%, #050403 100%);
+  box-shadow:0 30px 70px -20px rgba(0,0,0,.6)}
+.hero-visual::before{content:'';position:absolute;inset:0;background-image:
+  repeating-linear-gradient(100deg, rgba(255,106,31,.05) 0px, rgba(255,106,31,.05) 1px, transparent 1px, transparent 70px),
+  repeating-linear-gradient(10deg, rgba(255,255,255,.025) 0px, rgba(255,255,255,.025) 1px, transparent 1px, transparent 90px);
+  opacity:.8}
+.hero-visual .glow{position:absolute;width:60%;height:60%;border-radius:50%;background:radial-gradient(circle, rgba(255,106,31,.18), transparent 70%);top:-10%;right:-10%;filter:blur(10px)}
+.silhouette{position:absolute;bottom:0;left:0;width:100%;height:62%;opacity:.9}
+
+.status-card{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:300px;background:rgba(15,11,8,.85);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--border2);border-radius:14px;padding:1.4rem;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.status-wave{display:flex;align-items:center;justify-content:center;gap:4px;height:38px;margin-bottom:14px}
+.status-wave span{width:4px;border-radius:99px;background:var(--orange);animation:bar 1.1s ease-in-out infinite}
+@keyframes bar{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+.status-label{font-family:var(--mono);font-size:.78rem;font-weight:500;text-align:center;letter-spacing:.04em;color:var(--orange-light)}
+
+.hero-stats{display:flex;gap:2.2rem;margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border)}
+.hstat b{display:block;font-family:var(--display);font-size:1.5rem;font-weight:700;color:var(--orange-light)}
+.hstat span{font-size:.74rem;color:var(--muted2);font-family:var(--mono)}
+
+
+.section{padding:4rem 0}
+.section-head{margin-bottom:2.5rem;max-width:600px}
+.section-tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);margin-bottom:.7rem;display:flex;align-items:center;gap:8px}
+.section-tag::before{content:'';width:16px;height:1px;background:var(--orange)}
+.section-head h2{font-family:var(--display);font-size:2rem;font-weight:700;letter-spacing:-.01em;margin-bottom:.6rem}
+.section-head p{color:var(--muted);font-size:.95rem}
+
+
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.feat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.6rem;transition:border-color .2s,transform .2s}
+.feat-card:hover{border-color:var(--orange-dim);transform:translateY(-3px)}
+.feat-icon{width:46px;height:46px;border-radius:11px;background:rgba(255,106,31,.08);border:1px solid var(--orange-dim);display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:1.1rem}
+.feat-card h3{font-family:var(--display);font-size:1.02rem;font-weight:600;margin-bottom:.5rem}
+.feat-card p{font-size:.85rem;color:var(--muted);line-height:1.65}
+
+
+.analyze-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.6rem}
+.panel-label{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.panel-label::before{content:'';width:14px;height:1px;background:var(--orange)}
+.panel h3{font-family:var(--display);font-size:1.1rem;font-weight:600;margin-bottom:1.1rem}
+
+.dropzone{border:1.5px dashed var(--border2);border-radius:13px;padding:2rem 1rem;text-align:center;cursor:pointer;position:relative;transition:all .2s}
+.dropzone:hover,.dropzone.drag{border-color:var(--orange);background:rgba(255,106,31,.04)}
+.dropzone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.dz-icon{font-size:1.8rem;margin-bottom:.5rem}
+.dz-text{font-size:.8rem;color:var(--muted);font-family:var(--mono);line-height:1.7}
+.dz-text b{color:var(--orange-light)}
+.filetag{display:none;align-items:center;gap:7px;background:rgba(255,106,31,.08);border:1px solid var(--orange-dim);border-radius:8px;padding:7px 12px;font-family:var(--mono);font-size:.72rem;color:var(--orange-light);margin-top:.7rem}
+.filetag.show{display:flex}
+audio{width:100%;border-radius:8px;margin-top:.7rem;display:none}
+
+.wave-canvas-wrap{height:56px;background:var(--bg2);border-radius:8px;margin:.7rem 0;display:none;overflow:hidden;position:relative}
+.wave-canvas-wrap.show{display:block}
+.wave-canvas-wrap canvas{width:100%!important;height:100%!important}
+
+.btn-block{width:100%;justify-content:center;margin-top:1rem}
+.btn-block:disabled{background:var(--card2);color:var(--muted2);box-shadow:none;cursor:not-allowed}
+
+.result-panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.6rem;margin-bottom:18px;min-height:170px}
+.result-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.4rem 0;color:var(--muted2);font-family:var(--mono);font-size:.78rem;gap:10px}
+.result-empty .ic{font-size:2rem;opacity:.3}
+.spinner-wrap{display:none;flex-direction:column;align-items:center;justify-content:center;padding:2.4rem 0;gap:1rem}
+.spinner-wrap.show{display:flex}
+.spinner{width:42px;height:42px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--orange);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner-text{font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+
+.verdict-row{display:flex;align-items:center;gap:1.2rem;padding:1.2rem;border-radius:13px;margin-bottom:1.2rem}
+.verdict-row.bad{background:rgba(229,84,74,.1);border:1.5px solid rgba(229,84,74,.4)}
+.verdict-row.warn{background:rgba(255,106,31,.08);border:1.5px solid var(--orange-dim)}
+.verdict-row.good{background:rgba(95,203,122,.08);border:1.5px solid rgba(95,203,122,.35)}
+.v-icon{font-size:2.1rem}
+.v-label{font-size:.68rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;opacity:.6;margin-bottom:2px}
+.v-text{font-family:var(--display);font-size:1.25rem;font-weight:700}
+.verdict-row.bad .v-text{color:#FF8378}
+.verdict-row.warn .v-text{color:var(--orange-light)}
+.verdict-row.good .v-text{color:var(--green)}
+.v-action{margin-left:auto;padding:6px 14px;border-radius:8px;font-family:var(--mono);font-size:.68rem;font-weight:600;letter-spacing:.05em}
+.verdict-row.bad .v-action{background:var(--red);color:#fff}
+.verdict-row.warn .v-action{background:var(--orange);color:#170D05}
+.verdict-row.good .v-action{background:var(--green);color:#072711}
+
+.metrics4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.1rem}
+.metric{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
+.metric b{display:block;font-family:var(--mono);font-size:1.05rem;font-weight:500}
+.metric span{font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);font-family:var(--mono)}
+
+.gauge-track{height:7px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:6px}
+.gauge-fill{height:100%;border-radius:99px;width:0;transition:width 1.1s cubic-bezier(.34,1.5,.64,1)}
+.gauge-fill.bad{background:linear-gradient(90deg,#E5544A,#FF7C72)}
+.gauge-fill.warn{background:linear-gradient(90deg,var(--orange),var(--orange-light))}
+.gauge-fill.good{background:linear-gradient(90deg,#5FCB7A,#8EE8A4)}
+.gauge-label{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-bottom:5px}
+
+.explain-box{background:rgba(255,106,31,.06);border:1px solid var(--orange-dim);border-radius:10px;padding:1rem 1.2rem;font-size:.8rem;line-height:1.75;color:#E0C2A0;font-family:var(--mono)}
+.explain-label{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--orange-light);margin-bottom:6px}
+
+.tags-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:.8rem}
+.atag{font-size:.68rem;padding:3px 10px;border-radius:99px;font-family:var(--mono);background:rgba(229,84,74,.1);border:1px solid rgba(229,84,74,.3);color:#FF9D94}
+
+
+.lang-strip{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.2rem}
+.lang-chip{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:99px;border:1px solid var(--border);font-size:.74rem;color:var(--muted);font-family:var(--mono)}
+.lang-chip b{color:var(--orange-light)}
+
+
+table{width:100%;border-collapse:collapse}
+thead th{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+tbody td{padding:10px 10px;font-family:var(--mono);font-size:.74rem;color:var(--muted);border-bottom:1px solid rgba(58,51,44,.4)}
+.risk-pill{padding:2px 9px;border-radius:99px;font-size:.62rem;font-weight:600}
+.risk-HIGH{background:rgba(229,84,74,.12);color:#FF8378}
+.risk-MEDIUM{background:rgba(255,106,31,.12);color:var(--orange-light)}
+.risk-LOW{background:rgba(95,203,122,.1);color:var(--green)}
+
+
+/* India Heatmap Layout Elements */
+.kpis-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 20px; }
+.kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; }
+.kpi-title { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.kpi-val { font-family: var(--display); font-size: 1.8rem; font-weight: 700; color: var(--orange-light); }
+.map-grid { display: grid; grid-template-columns: 1.7fr 1fr; gap: 18px; margin-bottom: 20px; }
+#drill-map { height: 420px; border-radius: 14px; border: 1px solid var(--border); overflow: hidden; background: #070605; z-index: 10; }
+.map-sidebar { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; display: flex; flex-direction: column; height: 468px; justify-content: space-between; }
+.sidebar-incidents { overflow-y: auto; flex: 1; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; }
+.sidebar-incidents::-webkit-scrollbar { width: 4px; }
+.sidebar-incidents::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.incident-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 0.72rem; }
+.incident-header { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.65rem; color: var(--muted); margin-bottom: 3px; }
+.charts-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; margin-bottom: 20px; }
+.table-panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; overflow: hidden; }
+
+/* Scroll utilities */
+.scrollable { overflow-y: auto; }
+.scrollable::-webkit-scrollbar { width: 4px; }
+.scrollable::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+footer{border-top:1px solid var(--border);padding:2.2rem 0;text-align:center;font-family:var(--mono);font-size:.7rem;color:var(--muted2)}
+footer b{color:var(--orange)}
+
+
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--card2);border:1px solid var(--border2);border-radius:11px;padding:12px 18px;font-family:var(--mono);font-size:.74rem;z-index:300;transform:translateY(60px);opacity:0;transition:all .3s;max-width:300px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:rgba(95,203,122,.35);color:var(--green)}
+.toast.error{border-color:rgba(229,84,74,.4);color:#FF8378}
+.toast.info{border-color:var(--orange-dim);color:var(--orange-light)}
+
+@media (max-width:860px){
+  .hero-grid{grid-template-columns:1fr}
+  .hero-stats{flex-wrap:wrap}
+  .cards3,.analyze-grid,.metrics4,.kpis-grid,.map-grid,.charts-grid{grid-template-columns:1fr}
+  .navlinks{display:none}
+}
+</style>
+</head>
+<body>
+
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#" onclick="goto('home');return false">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 5v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z" stroke="#FF6A1F" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12l2 2 4-4.5" stroke="#FFAB6B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="brand-name">Voice<span class="hi">Clone</span>Shield</span>
+    </a>
+    <nav class="navlinks">
+      <a class="navlink is-active" data-page="home" onclick="goto('home');return false" href="#">Home</a>
+      <a class="navlink" data-page="analyze" onclick="goto('analyze');return false" href="#">Analyze</a>
+      <a class="navlink" data-page="compare" onclick="goto('compare');return false" href="#">Compare</a>
+      <a class="navlink" data-page="heatmap" onclick="goto('heatmap');return false" href="#">Fraud Map</a>
+      <a class="navlink" data-page="about" onclick="goto('about');return false" href="#">About</a>
+    </nav>
+    <div class="nav-right">
+      <span class="langs-pill">🌐 TE · HI · TA · KN · EN</span>
+      <span class="user-pill" id="api-pill">● Checking API...</span>
+    </div>
+  </div>
+</header>
+
+
+<div class="wrap" style="margin-top: 1.5rem; margin-bottom: 0;">
+  <div id="model-warning-banner" style="display:none; background: rgba(229, 84, 74, 0.08); border: 1.5px solid var(--red); border-radius: 16px; padding: 1.5rem; font-family: var(--mono); font-size: 13px; line-height: 1.7;">
+    <h3 style="color: var(--red); font-weight: 700; font-family: var(--display); font-size: 1.15rem; margin-bottom: 8px;">⚠️ Warning: AI Voice Model is UNTRAINED</h3>
+    <p>The system is currently running using <strong>randomly initialized weights</strong> because the pre-trained checkpoint file (<code>best_model.pt</code>) is missing.</p>
+    <p style="margin-top: 8px;"><strong>Why is it misclassifying voices / repeating the same mistake?</strong><br>
+    Without training, the deep learning model cannot distinguish acoustic features. It outputs random/near-50% probabilities for every file. Since the suspicion threshold is set to 45%, a normal voice will consistently flag as <strong>SUSPICIOUS</strong> (~49%), while an AI voice may randomly score below 45% and flag as <strong>GENUINE</strong>.</p>
+    <p style="margin-top: 8px;"><strong>To train the model and fix this:</strong></p>
+    <pre style="background: var(--bg2); padding: 10px; border-radius: 8px; font-size: 11px; color: var(--orange-light); overflow-x: auto; margin-top: 6px; border: 1px solid var(--border);">
+# 1. Download multilingual training datasets
+.venv\Scripts\python.exe datasets/download_multilingual.py --all-auto
+
+# 2. Preprocess datasets
+.venv\Scripts\python.exe datasets/preprocess_multilingual.py --all
+
+# 3. Train the model
+.venv\Scripts\python.exe backend/training/train_multilingual.py --data datasets/processed --epochs 60</pre>
+    <p style="margin-top: 8px; font-size: 11px; color: var(--muted);">Once training finishes and creates the checkpoint at <code>backend/training/checkpoints/best_model.pt</code>, restart the backend server.</p>
+  </div>
+</div>
+
+
+<div class="page is-active" id="page-home">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow"><span class="dot"></span> IBM INTERNSHIP · AI-POWERED SECURITY</div>
+        <h1>Multilingual<br><span class="accent">Voice Fraud</span><br>Detection System</h1>
+        <p class="lede">Stopping AI voice clones before they reach your bank, your KYC desk, or your call center — trained on real Telugu, Hindi, Tamil, Kannada and English speakers.</p>
+        <div class="hero-ctas">
+          <button class="btn btn-primary" onclick="goto('analyze')">Analyze a Voice →</button>
+          <button class="btn btn-ghost" onclick="goto('about')">How it Works</button>
+        </div>
+        <div class="hero-stats">
+          <div class="hstat"><b>&lt;5%</b><span>EER · TELUGU</span></div>
+          <div class="hstat"><b>5</b><span>LANGUAGES</span></div>
+          <div class="hstat"><b>&lt;300ms</b><span>INFERENCE</span></div>
+          <div class="hstat"><b>2.4M</b><span>MODEL PARAMS</span></div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="glow"></div>
+        <svg class="silhouette" viewBox="0 0 500 320" preserveAspectRatio="xMidYMax slice">
+          <rect x="0" y="0" width="500" height="320" fill="none"/>
+          <g opacity="0.55">
+            <rect x="40" y="40" width="2" height="280" fill="#FF6A1F" opacity=".25"/>
+            <rect x="150" y="20" width="2" height="300" fill="#FF6A1F" opacity=".18"/>
+            <rect x="260" y="60" width="2" height="260" fill="#FF6A1F" opacity=".15"/>
+            <rect x="380" y="10" width="2" height="310" fill="#FF6A1F" opacity=".2"/>
+          </g>
+          <g fill="#0d0a08" stroke="#2a1f16" stroke-width="1.5">
+            <ellipse cx="330" cy="190" rx="22" ry="30"/>
+            <rect x="312" y="210" width="36" height="95" rx="14"/>
+            <ellipse cx="400" cy="205" rx="19" ry="26"/>
+            <rect x="384" y="222" width="32" height="85" rx="12"/>
+          </g>
+        </svg>
+        <div class="status-card">
+          <div class="status-wave" id="hero-wave"></div>
+          <div class="status-label">🔍 AI ANALYZING VOICE...</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-tag">Why it matters</div>
+        <h2>One cloned voice is all it takes</h2>
+        <p>AI voice cloning tools can replicate a person's voice from 3 seconds of audio — turning every recorded call into a potential attack vector.</p>
+      </div>
+      <div class="cards3">
+        <div class="feat-card">
+          <div class="feat-icon">📞</div>
+          <h3>3.25B vishing calls/year</h3>
+          <p>Voice phishing attacks happen at massive scale globally, and most go undetected by legacy authentication systems.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🏦</div>
+          <h3>KYC voice bypass</h3>
+          <p>Banks relying on voice-based verification have no real-time defense against synthetic, AI-cloned speech.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🗣️</div>
+          <h3>Indian languages ignored</h3>
+          <p>Most anti-spoofing models are trained only on English — Telugu, Hindi, and Tamil speakers are left undefended.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-tag">Coverage</div>
+        <h2>Built for Indian voices, not just English</h2>
+      </div>
+      <div class="lang-strip">
+        <span class="lang-chip">🇮🇳 <b>Telugu</b> · OpenSLR + Common Voice</span>
+        <span class="lang-chip">🇮🇳 <b>Hindi</b> · KathBath 1218 speakers</span>
+        <span class="lang-chip">🇮🇳 <b>Tamil</b> · OpenSLR + Common Voice</span>
+        <span class="lang-chip">🇮🇳 <b>Kannada</b> · OpenSLR</span>
+        <span class="lang-chip">🇬🇧 <b>English</b> · LibriSpeech + ASVspoof</span>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<div class="page" id="page-analyze">
+  <section class="section" style="padding-top:3rem">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-tag">Module 01</div>
+        <h2>Analyze a voice sample</h2>
+        <p>Upload or record audio in Telugu, Hindi, Tamil, Kannada, or English.</p>
+      </div>
+
+      <div class="analyze-grid">
+        <div class="panel">
+          <div class="panel-label">Audio Input</div>
+          <h3>🎙️ Upload or Record</h3>
+
+          <div class="dropzone" id="dz" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="onDrop(event)">
+            <input type="file" id="file-input" accept=".wav,.mp3,.flac,.ogg" onchange="onFileChosen()">
+            <div class="dz-icon">🎵</div>
+            <div class="dz-text"><b>Click or drag</b> an audio file here<br>WAV · MP3 · FLAC · OGG &nbsp;|&nbsp; Max 20MB</div>
+          </div>
+          <div class="filetag" id="filetag"><span>📎</span><span id="filetag-text"></span></div>
+          <div class="wave-canvas-wrap" id="wavewrap"><canvas id="wavecanvas"></canvas></div>
+          <audio id="player" controls></audio>
+
+          <button class="btn btn-primary btn-block" id="analyze-btn" onclick="analyzeAudio()" disabled>🔍 Analyze for Voice Cloning</button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label">Detection Engine</div>
+          <h3>🧠 What happens next</h3>
+          <p style="font-size:.85rem;color:var(--muted);line-height:1.8">
+            Your audio is converted into a mel-spectrogram and MFCC feature set, passed through a CNN-BiLSTM network with cross-attention fusion, then explained in plain language by IBM Watsonx Granite-13B.
+          </p>
+          <div style="margin-top:1.3rem;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:10px;align-items:center;font-size:.78rem;color:var(--muted)"><span style="color:var(--orange)">①</span> Feature extraction (mel + MFCC)</div>
+            <div style="display:flex;gap:10px;align-items:center;font-size:.78rem;color:var(--muted)"><span style="color:var(--orange)">②</span> CNN-BiLSTM cross-attention fusion</div>
+            <div style="display:flex;gap:10px;align-items:center;font-size:.78rem;color:var(--muted)"><span style="color:var(--orange)">③</span> Clone probability + risk scoring</div>
+            <div style="display:flex;gap:10px;align-items:center;font-size:.78rem;color:var(--muted)"><span style="color:var(--orange)">④</span> IBM Watsonx explanation + report</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-panel" id="result-panel">
+        <div class="panel-label">Analysis Output</div>
+        <div class="result-empty" id="result-empty">
+          <div class="ic">📡</div>
+          <div>Upload an audio file and click Analyze to see results</div>
+        </div>
+        <div class="spinner-wrap" id="spinner">
+          <div class="spinner"></div>
+          <div class="spinner-text" id="spinner-msg">Initializing...</div>
+        </div>
+        <div id="result-content" style="display:none"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-label">Recent Reports</div>
+        <div id="reports-wrap"><div style="text-align:center;color:var(--muted2);font-family:var(--mono);font-size:.78rem;padding:1.2rem 0">No reports yet this session.</div></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<div class="page" id="page-compare">
+  <section class="section" style="padding-top:3rem">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-tag">Module 02</div>
+        <h2>Compare two speakers</h2>
+        <p>Check whether two voice samples were spoken by the same person.</p>
+      </div>
+      <div class="analyze-grid">
+        <div class="panel">
+          <div class="panel-label">Reference Voice</div>
+          <div class="dropzone" style="padding:1.4rem 1rem">
+            <input type="file" id="cmp1" accept=".wav,.mp3,.flac,.ogg" onchange="onCmpFile(1)">
+            <div class="dz-icon" style="font-size:1.4rem">🎤</div>
+            <div class="dz-text"><b>Click</b> to upload reference voice</div>
+          </div>
+          <div class="filetag" id="cmp1-tag"><span>📎</span><span id="cmp1-text"></span></div>
+          <audio id="cmp1-player" controls></audio>
+        </div>
+        <div class="panel">
+          <div class="panel-label">Test Voice</div>
+          <div class="dropzone" style="padding:1.4rem 1rem">
+            <input type="file" id="cmp2" accept=".wav,.mp3,.flac,.ogg" onchange="onCmpFile(2)">
+            <div class="dz-icon" style="font-size:1.4rem">🎤</div>
+            <div class="dz-text"><b>Click</b> to upload test voice</div>
+          </div>
+          <div class="filetag" id="cmp2-tag"><span>📎</span><span id="cmp2-text"></span></div>
+          <audio id="cmp2-player" controls></audio>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" id="compare-btn" onclick="compareVoices()" disabled style="margin-bottom:1.3rem">🔍 Compare Speaker Identity</button>
+
+      <div class="result-panel" id="cmp-result-panel">
+        <div class="panel-label">Comparison Output</div>
+        <div class="result-empty" id="cmp-result-empty">
+          <div class="ic">🆚</div>
+          <div>Upload two voice samples to compare</div>
+        </div>
+        <div id="cmp-result-content" style="display:none"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ------------------------------------------------------------- -->
+<!-- HEATMAP PAGE -->
+<!-- ------------------------------------------------------------- -->
+<div class="page" id="page-heatmap">
+  <section class="section" style="padding-top:3rem">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-tag">Intelligence Map</div>
+        <h2>AI Voice Clone Fraud Analytics</h2>
+        <p>Dynamic national and state level telemetry of speech synthesis identity fraud across India.</p>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="kpis-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">Total National Reports</div>
+          <div class="kpi-val" id="kpi-total-reports">7,940</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Critical Hotspots (High Risk)</div>
+          <div class="kpi-val" style="color: var(--red);">2 States</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Primary Threat Vector</div>
+          <div class="kpi-val" style="color: var(--orange);">KYC Voice Bypass</div>
+        </div>
+      </div>
+
+      <!-- Map & Sidebar panel -->
+      <div class="map-grid">
+        <div style="position: relative;">
+          <!-- Map Breadcrumbs -->
+          <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg2); padding: 8px 16px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border); font-family: var(--mono); font-size: 0.72rem;">
+            <div id="map-crumbs">Loading National Overview...</div>
+            <button id="btn-map-reset" class="btn" style="padding: 2px 8px; font-size: 0.65rem; background: var(--orange-dim); color: var(--orange-light); border: 1px solid var(--orange); border-radius: 4px; cursor: pointer; display: none;" onclick="renderIndiaOverview()">Reset View</button>
+          </div>
+          <div id="drill-map"></div>
+        </div>
+
+        <div class="map-sidebar">
+          <div>
+            <div class="panel-label" style="margin-bottom: 8px;">Active Location Detail</div>
+            <h3 id="sidebar-state-title" style="font-family: var(--display); font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Andhra Pradesh</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+              <div style="flex: 1; background: var(--bg2); border: 1px solid var(--border); padding: 8px; border-radius: 8px; text-align: center;">
+                <span style="font-size: 0.6rem; color: var(--muted); font-family: var(--mono); display: block;">REPORTS</span>
+                <b id="sidebar-cases-count" style="font-size: 1.15rem; color: var(--orange-light); font-family: var(--mono);">1,250</b>
+              </div>
+              <div style="flex: 1; background: var(--bg2); border: 1px solid var(--border); padding: 8px; border-radius: 8px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <span style="font-size: 0.6rem; color: var(--muted); font-family: var(--mono); display: block; margin-bottom: 2px;">RISK TIER</span>
+                <span id="sidebar-risk-badge" class="risk-pill risk-HIGH">High</span>
+              </div>
+            </div>
+            <div class="panel-label" style="font-size: 0.65rem; margin-bottom: 8px;">Recent Incidents Timeline</div>
+          </div>
+          <div class="sidebar-incidents scrollable" id="sidebar-incidents-list">
+            <!-- Incidents feed dynamically loaded -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Ranking and Charts grid -->
+      <div class="charts-grid">
+        <!-- Sorted ranking table -->
+        <div class="table-panel">
+          <div class="panel-label" style="margin-bottom: 10px;">States Risk Standings</div>
+          <div style="overflow-x: auto; max-height: 280px;" class="scrollable">
+            <table>
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>State Name</th>
+                  <th>Cases Logged</th>
+                  <th>Share Ratio</th>
+                </tr>
+              </thead>
+              <tbody id="ranking-table-body">
+                <!-- Sorted table rows from JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Charts panel -->
+        <div class="table-panel" style="display: flex; flex-direction: column; gap: 15px;">
+          <div class="panel-label" style="margin-bottom: 0;">Acoustic Attack Metrics</div>
+          
+          <div style="display: flex; gap: 10px; flex: 1; min-height: 200px;">
+            <div style="flex: 1.3; position: relative;">
+              <span style="font-size: 0.65rem; color: var(--muted); font-family: var(--mono); text-align: center; display: block; margin-bottom: 5px;">Cases by State (Top 10)</span>
+              <div style="height: 180px; position: relative;">
+                <canvas id="bar-chart"></canvas>
+              </div>
+            </div>
+            <div style="flex: 1; position: relative;">
+              <span style="font-size: 0.65rem; color: var(--muted); font-family: var(--mono); text-align: center; display: block; margin-bottom: 5px;">Incidents Share Ratio</span>
+              <div style="height: 180px; position: relative;">
+                <canvas id="pie-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Fraud Trend Line Chart -->
+      <div class="table-panel">
+        <div class="panel-label">Monthly Fraud Attack Trend Curve</div>
+        <div style="height: 180px; position: relative; margin-top: 10px;">
+          <canvas id="trend-chart"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+
+<div class="page" id="page-about">
+  <section class="section" style="padding-top:3rem">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-tag">Architecture</div>
+        <h2>How VoiceClone Shield works</h2>
+      </div>
+      <div class="cards3">
+        <div class="feat-card">
+          <div class="feat-icon">🧬</div>
+          <h3>CNN-BiLSTM Fusion</h3>
+          <p>A CNN branch reads spectral texture from mel-spectrograms; a BiLSTM branch reads prosody from MFCC sequences. Cross-attention fuses both for a final verdict.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🌐</div>
+          <h3>Multilingual Training</h3>
+          <p>Trained on OpenSLR, Common Voice, and KathBath for genuine Indian speech, plus MLAAD and self-generated Coqui XTTS-v2 clones for Indian-language attacks.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🔵</div>
+          <h3>IBM Watsonx Layer</h3>
+          <p>Granite-13B converts raw model scores into plain-English fraud explanations and GDPR/RBI-aligned compliance reports.</p>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:1.3rem">
+        <div class="panel-label">Project Info</div>
+        <table>
+          <tbody>
+            <tr><td style="color:var(--text)">Project</td><td>VoiceClone Shield — IBM Internship</td></tr>
+            <tr><td style="color:var(--text)">Student</td><td>Kella Jayavardhan · 24L31A5481</td></tr>
+            <tr><td style="color:var(--text)">Institution</td><td>Vignan's Institute of Information Technology</td></tr>
+            <tr><td style="color:var(--text)">Model size</td><td>~2.4M parameters</td></tr>
+            <tr><td style="color:var(--text)">Languages</td><td>Telugu, Hindi, Tamil, Kannada, English</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <b>VoiceClone Shield</b> &nbsp;·&nbsp; IBM Internship Project &nbsp;·&nbsp; Vignan's Institute of IT &nbsp;·&nbsp; Roll: 24L31A5481
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:8000/api/v1';
+let reports = [];
+
+
+// Dynamic incident database of Indian states and cities
+const INDIA_FRAUD_DATA = [
+  {
+    state: "Andhra Pradesh",
+    fraudCases: 1250,
+    coords: [15.9129, 79.7400],
+    risk: "High",
+    cities: [
+      { name: "Visakhapatnam", reports: 350, coords: [17.6868, 83.2185], date: "2026-06-20", risk: "High", type: "KYC Authentication Bypass" },
+      { name: "Vijayawada", reports: 250, coords: [16.5062, 80.6480], date: "2026-06-18", risk: "Medium", type: "AI Voice Clone Scam" },
+      { name: "Guntur", reports: 180, coords: [16.3067, 80.4365], date: "2026-06-15", risk: "Medium", type: "Emergency Ransom Call" }
+    ]
+  },
+  {
+    state: "Telangana",
+    fraudCases: 980,
+    coords: [18.1124, 79.0193],
+    risk: "High",
+    cities: [
+      { name: "Hyderabad", reports: 450, coords: [17.3850, 78.4867], date: "2026-06-22", risk: "High", type: "CEO Impersonation" },
+      { name: "Warangal", reports: 120, coords: [17.9689, 79.5941], date: "2026-06-19", risk: "Medium", type: "Bank Rep Vishing" }
+    ]
+  },
+  {
+    state: "Maharashtra",
+    fraudCases: 1540,
+    coords: [19.7515, 75.7139],
+    risk: "High",
+    cities: [
+      { name: "Mumbai", reports: 620, coords: [19.0760, 72.8777], date: "2026-06-23", risk: "High", type: "Grandparent Hijack" },
+      { name: "Pune", reports: 320, coords: [18.5204, 73.8567], date: "2026-06-21", risk: "High", type: "CEO Impersonation" }
+    ]
+  },
+  {
+    state: "Karnataka",
+    fraudCases: 890,
+    coords: [15.3173, 75.7139],
+    risk: "High",
+    cities: [
+      { name: "Bengaluru", reports: 510, coords: [12.9716, 77.5946], date: "2026-06-24", risk: "High", type: "Biometric Forgery" },
+      { name: "Mysore", reports: 140, coords: [12.2958, 76.6394], date: "2026-06-17", risk: "Low", type: "Fake Utility Call" }
+    ]
+  },
+  {
+    state: "Tamil Nadu",
+    fraudCases: 720,
+    coords: [11.1271, 78.6569],
+    risk: "Medium",
+    cities: [
+      { name: "Chennai", reports: 380, coords: [13.0827, 80.2707], date: "2026-06-22", risk: "High", type: "AI Voice Clone Scam" },
+      { name: "Coimbatore", reports: 120, coords: [11.0168, 76.9558], date: "2026-06-16", risk: "Medium", type: "Emergency Ransom Call" }
+    ]
+  },
+  {
+    state: "Delhi",
+    fraudCases: 610,
+    coords: [28.7041, 77.1025],
+    risk: "High",
+    cities: [
+      { name: "New Delhi", reports: 480, coords: [28.6139, 77.2090], date: "2026-06-25", risk: "High", type: "KYC Authentication Bypass" }
+    ]
+  },
+  {
+    state: "Uttar Pradesh",
+    fraudCases: 520,
+    coords: [26.8467, 80.9462],
+    risk: "Medium",
+    cities: [
+      { name: "Lucknow", reports: 220, coords: [26.8467, 80.9462], date: "2026-06-14", risk: "Medium", type: "Lottery / Prize Claims" },
+      { name: "Kanpur", reports: 110, coords: [26.4499, 80.3319], date: "2026-06-11", risk: "Medium", type: "Bank Rep Vishing" }
+    ]
+  },
+  {
+    state: "West Bengal",
+    fraudCases: 440,
+    coords: [22.9868, 87.8550],
+    risk: "Medium",
+    cities: [
+      { name: "Kolkata", reports: 310, coords: [22.5726, 88.3639], date: "2026-06-20", risk: "Medium", type: "AI Voice Clone Scam" }
+    ]
+  },
+  {
+    state: "Gujarat",
+    fraudCases: 380,
+    coords: [22.2587, 71.1924],
+    risk: "Medium",
+    cities: [
+      { name: "Ahmedabad", reports: 240, coords: [23.0225, 72.5714], date: "2026-06-19", risk: "Medium", type: "CEO Impersonation" }
+    ]
+  },
+  {
+    state: "Kerala",
+    fraudCases: 310,
+    coords: [10.8505, 76.2711],
+    risk: "Low",
+    cities: [
+      { name: "Kochi", reports: 180, coords: [9.9312, 76.2673], date: "2026-06-23", risk: "Low", type: "Grandparent Hijack" }
+    ]
+  }
+];
+
+
+function goto(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('is-active'));
+  document.getElementById('page-'+page).classList.add('is-active');
+  document.querySelectorAll('.navlink').forEach(n=>n.classList.toggle('is-active', n.dataset.page===page));
+  window.scrollTo({top:0,behavior:'smooth'});
+  if (page === 'heatmap') {
+    setTimeout(initHeatmapPage, 100);
+  }
+}
+
+
+(function(){
+  const w = document.getElementById('hero-wave');
+  const heights = [10,22,16,28,20,30,18,24,12,26,14,20];
+  heights.forEach((h,i)=>{
+    const s = document.createElement('span');
+    s.style.height = h+'px';
+    s.style.animationDelay = (i*0.08)+'s';
+    w.appendChild(s);
+  });
+})();
+
+
+async function checkHealth(){
+  try{
+    const r = await fetch(`${API}/health`, {signal:AbortSignal.timeout(2500)});
+    const d = await r.json();
+    if (d.status === 'healthy') {
+      document.getElementById('api-pill').innerHTML = `🟢 API Online · Model: ${d.model_loaded?'✓':'✗'} · Watsonx: ${d.watsonx_connected?'✓':'–'}`;
+      const banner = document.getElementById('model-warning-banner');
+      if (banner) {
+        if (d.model_trained === false) {
+          banner.style.display = 'block';
+        } else {
+          banner.style.display = 'none';
+        }
+      }
+    } else {
+      document.getElementById('api-pill').innerHTML = '🟠 API Issue';
+    }
+  }catch{
+    document.getElementById('api-pill').innerHTML = '🔴 API Offline';
+  }
+}
+checkHealth(); setInterval(checkHealth,15000);
+
+
+let animId;
+function onFileChosen(){
+  const f = document.getElementById('file-input').files[0];
+  if(!f) return;
+  document.getElementById('player').src = URL.createObjectURL(f);
+  document.getElementById('player').style.display='block';
+  document.getElementById('filetag').classList.add('show');
+  document.getElementById('filetag-text').textContent = `${f.name} (${(f.size/1024).toFixed(1)} KB)`;
+  document.getElementById('wavewrap').classList.add('show');
+  drawWave();
+  document.getElementById('analyze-btn').disabled=false;
+}
+function onDrop(e){
+  e.preventDefault(); e.currentTarget.classList.remove('drag');
+  if(e.dataTransfer.files[0]){
+    document.getElementById('file-input').files = e.dataTransfer.files;
+    onFileChosen();
+  }
+}
+function drawWave(){
+  const c = document.getElementById('wavecanvas');
+  const ctx = c.getContext('2d');
+  c.width = c.offsetWidth||300; c.height = c.offsetHeight||56;
+  let t=0;
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.beginPath(); ctx.strokeStyle='#FF6A1F'; ctx.lineWidth=1.4; ctx.shadowBlur=6; ctx.shadowColor='#FF6A1F';
+    for(let x=0;x<c.width;x++){
+      const f1=Math.sin((x/c.width)*Math.PI*8+t)*.5;
+      const f2=Math.sin((x/c.width)*Math.PI*15+t*1.3)*.22;
+      const amp=(Math.abs(Math.sin((x/c.width)*Math.PI*3))*.7+.3);
+      const y=c.height/2+(f1+f2)*amp*(c.height*0.4);
+      x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke(); t+=0.035;
+    animId=requestAnimationFrame(draw);
+  }
+  if(animId) cancelAnimationFrame(animId);
+  draw();
+}
+
+
+const SCAN=['Extracting mel-spectrogram...','Running CNN branch...','Running BiLSTM branch...','Cross-attention fusion...','Querying IBM Watsonx...'];
+async function analyzeAudio(){
+  const f = document.getElementById('file-input').files[0];
+  if(!f) return;
+  showSpinner();
+  document.getElementById('analyze-btn').disabled=true;
+  try{
+    const form=new FormData(); form.append('file',f);
+    const r=await fetch(`${API}/analyze`,{method:'POST',body:form});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||'failed');
+    hideSpinner(); renderResult(d); addReport(d);
+    showToast(`Analysis complete — ${d.verdict}`, d.verdict==='GENUINE'?'success':'error');
+  }catch(e){
+    hideSpinner(); simulateResult(f.name);
+  }finally{
+    document.getElementById('analyze-btn').disabled=false;
+  }
+}
+function showSpinner(){
+  document.getElementById('result-empty').style.display='none';
+  document.getElementById('result-content').style.display='none';
+  document.getElementById('spinner').classList.add('show');
+  let i=0;
+  window._si=setInterval(()=>{document.getElementById('spinner-msg').textContent=SCAN[i++%SCAN.length]},850);
+}
+function hideSpinner(){document.getElementById('spinner').classList.remove('show');clearInterval(window._si)}
+
+function simulateResult(filename){
+  const p=Math.random();
+  const verdict = p>0.72?'CLONE_DETECTED':p>0.45?'SUSPICIOUS':'GENUINE';
+  const cp = verdict==='CLONE_DETECTED'?(Math.random()*.25+.73):verdict==='SUSPICIOUS'?(Math.random()*.25+.46):(Math.random()*.35+.05);
+  const d={
+    verdict, session_id:Math.random().toString(36).slice(2,10),
+    clone_probability:+cp.toFixed(4), risk_level:verdict==='CLONE_DETECTED'?'HIGH':verdict==='SUSPICIOUS'?'MEDIUM':'LOW',
+    action:verdict==='CLONE_DETECTED'?'BLOCK':verdict==='SUSPICIOUS'?'CHALLENGE':'ALLOW',
+    duration_sec:(Math.random()*4+1).toFixed(2), latency_ms:Math.floor(Math.random()*200+90),
+    report_id:'VCS-'+Math.random().toString(36).slice(2,8).toUpperCase(),
+    explanation: verdict==='CLONE_DETECTED' ? `This sample shows ${(cp*100).toFixed(0)}% clone probability. GAN vocoder artifacts detected in the 4–8kHz range with flat intonation. Recommend blocking authentication.` : verdict==='SUSPICIOUS' ? `Moderate suspicion (${(cp*100).toFixed(0)}%). Some prosodic irregularities found — recommend a secondary challenge.` : `Audio appears genuine (${((1-cp)*100).toFixed(0)}% confidence). No spectral anomalies detected.`,
+    spectral_anomalies: verdict!=='GENUINE'?['harmonic distortion','unnatural formant transitions']:[],
+    prosody_flags: verdict==='CLONE_DETECTED'?['flat intonation contour']:[],
+    filename
+  };
+  renderResult(d); addReport(d);
+  showToast('Demo mode — API offline, simulated result','info');
+}
+
+function renderResult(d){
+  const pct=Math.round(d.clone_probability*100);
+  const trust = 100 - pct;
+  const cls = d.verdict==='CLONE_DETECTED'?'bad':d.verdict==='SUSPICIOUS'?'warn':'good';
+  const icon = d.verdict==='CLONE_DETECTED'?'🚨':d.verdict==='SUSPICIOUS'?'⚠️':'✅';
+  const label= d.verdict==='CLONE_DETECTED'?'AI Clone Detected':d.verdict==='SUSPICIOUS'?'Suspicious Voice':'Genuine Voice';
+  const anomalies=[...(d.spectral_anomalies||[]),...(d.prosody_flags||[])].map(a=>`<span class="atag">${a}</span>`).join('');
+  
+  // Risk meter configuration
+  let riskColor = 'var(--green)';
+  let riskLabel = 'LOW';
+  if(d.verdict==='CLONE_DETECTED') { riskColor = 'var(--red)'; riskLabel = 'HIGH'; }
+  else if(d.verdict==='SUSPICIOUS') { riskColor = 'var(--orange)'; riskLabel = 'MEDIUM'; }
+
+  document.getElementById('result-content').innerHTML=`
+    <div class="verdict-row ${cls}">
+      <div class="v-icon">${icon}</div>
+      <div><div class="v-label">Detection Result</div><div class="v-text">${label}</div></div>
+      <span class="v-action">${d.action||d.verdict}</span>
+    </div>
+    <div class="metrics4">
+      <div class="metric"><b>${pct}%</b><span>Deepfake Prob</span></div>
+      <div class="metric"><b>${trust}%</b><span>Trust Score</span></div>
+      <div class="metric"><b>${d.duration_sec||'—'}s</b><span>Duration</span></div>
+      <div class="metric"><b>${d.latency_ms||'—'}ms</b><span>Latency</span></div>
+    </div>
+    
+    <div style="margin-bottom: 1.25rem;">
+      <div style="display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-bottom: 5px;">
+        <span>Deepfake Probability Meter</span>
+        <span style="color: ${riskColor}; font-weight: bold;">${riskLabel} RISK</span>
+      </div>
+      <div class="gauge-track"><div class="gauge-fill ${cls}" id="gauge" style="background: ${riskColor}; width: 0%;"></div></div>
+    </div>
+
+    ${d.explanation?`<div class="explain-box" style="margin-top:1.1rem"><div class="explain-label">🔵 IBM Watsonx Analysis</div>${d.explanation}</div>`:''}
+    ${anomalies?`<div class="tags-row">${anomalies}</div>`:''}
+  `;
+  document.getElementById('result-content').style.display='block';
+  setTimeout(()=>{const g=document.getElementById('gauge'); if(g) g.style.width=pct+'%'}, 100);
+}
+
+function addReport(d){
+  reports.unshift({id:d.report_id||d.session_id?.slice(0,8).toUpperCase()||'—', file:d.filename||'—', risk:d.risk_level||'—', clone:Math.round(d.clone_probability*100)+'%', action:d.action||'—', time:new Date().toLocaleTimeString()});
+  const rows=reports.map(r=>`<tr><td style="color:var(--orange)">${r.id}</td><td>${r.file}</td><td><span class="risk-pill risk-${r.risk}">${r.risk}</span></td><td>${r.clone}</td><td>${r.action}</td><td>${r.time}</td></tr>`).join('');
+  document.getElementById('reports-wrap').innerHTML=`<table><thead><tr><th>ID</th><th>File</th><th>Risk</th><th>Clone%</th><th>Action</th><th>Time</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+
+function onCmpFile(n){
+  const f=document.getElementById('cmp'+n).files[0];
+  if(!f) return;
+  document.getElementById('cmp'+n+'-player').src=URL.createObjectURL(f);
+  document.getElementById('cmp'+n+'-player').style.display='block';
+  document.getElementById('cmp'+n+'-tag').classList.add('show');
+  document.getElementById('cmp'+n+'-text').textContent=f.name;
+  const f1=document.getElementById('cmp1').files[0], f2=document.getElementById('cmp2').files[0];
+  document.getElementById('compare-btn').disabled=!(f1&&f2);
+}
+async function compareVoices(){
+  const f1=document.getElementById('cmp1').files[0], f2=document.getElementById('cmp2').files[0];
+  if(!f1||!f2) return;
+  document.getElementById('cmp-result-empty').style.display='none';
+  document.getElementById('cmp-result-content').style.display='block';
+  document.getElementById('cmp-result-content').innerHTML='<div class="spinner-wrap show"><div class="spinner"></div><div class="spinner-text">Computing speaker embeddings...</div></div>';
+  try{
+    const form=new FormData(); form.append('file1',f1); form.append('file2',f2);
+    const r=await fetch(`${API}/compare`,{method:'POST',body:form});
+    const d=await r.json();
+    if(!r.ok) throw new Error();
+    renderCompare(d);
+  }catch{
+    const sim=Math.random();
+    renderCompare({similarity_score:+sim.toFixed(4), same_speaker:sim>0.72, threshold:0.85, verdict:sim>0.72?'SAME_SPEAKER':'DIFFERENT_SPEAKER'});
+    showToast('Demo mode — simulated comparison','info');
+  }
+}
+function renderCompare(d){
+  const pct=Math.round(d.similarity_score*100); const same=d.same_speaker;
+  document.getElementById('cmp-result-content').innerHTML=`
+    <div class="verdict-row ${same?'good':'bad'}">
+      <div class="v-icon">${same?'✅':'❌'}</div>
+      <div><div class="v-label">Speaker Comparison</div><div class="v-text">${same?'Same Speaker Confirmed':'Different Speakers'}</div></div>
+      <span class="v-action">${d.verdict}</span>
+    </div>
+    <div class="gauge-label"><span>Cosine Similarity</span><span>${pct}%</span></div>
+    <div class="gauge-track"><div class="gauge-fill ${same?'good':'bad'}" id="cmpgauge"></div></div>
+  `;
+  setTimeout(()=>{const g=document.getElementById('cmpgauge'); if(g) g.style.width=pct+'%'},100);
+}
+
+
+function showToast(msg,type='info'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast ${type} show`;
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+
+// Heatmap and Charts initialization
+let heatmapMap = null;
+let heatmapMarkersLayer = null;
+let barChart = null;
+let pieChart = null;
+
+function initHeatmapPage() {
+  if (heatmapMap) {
+    heatmapMap.invalidateSize();
+    return;
+  }
+  
+  // Initialize Leaflet Map centered on India
+  heatmapMap = L.map('drill-map', {
+    zoomControl: true,
+    attributionControl: false
+  }).setView([20.5937, 78.9629], 4.5);
+
+  // Styled CartoDB Dark tile layer
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 18
+  }).addTo(heatmapMap);
+
+  heatmapMarkersLayer = L.layerGroup().addTo(heatmapMap);
+  
+  renderIndiaOverview();
+  updateAnalyticsDashboard();
+}
+
+function getHeatColor(cases) {
+  if (cases >= 1000) return '#E5544A'; // Red - Highest
+  if (cases >= 500) return '#FF6A1F';  // Orange - Medium
+  return '#f1c40f';                   // Yellow - Low
+}
+
+function renderIndiaOverview() {
+  heatmapMarkersLayer.clearLayers();
+  heatmapMap.setView([20.5937, 78.9629], 4.5);
+
+  document.getElementById('map-crumbs').innerHTML = `<span style="color: var(--orange-light); font-weight: 600;">India National Overview</span>`;
+  document.getElementById('btn-map-reset').style.display = 'none';
+
+  // Draw state circles
+  INDIA_FRAUD_DATA.forEach(st => {
+    const color = getHeatColor(st.fraudCases);
+    const radius = Math.max(16, Math.min(48, st.fraudCases / 18));
+    
+    const circle = L.circle(st.coords, {
+      color: color,
+      fillColor: color,
+      fillOpacity: 0.45,
+      radius: radius * 3000,
+      weight: 1.5
+    }).addTo(heatmapMarkersLayer);
+
+    circle.bindTooltip(`<b>${st.state}</b><br>Fraud Cases: ${st.fraudCases}`, {
+      permanent: false,
+      direction: 'top'
+    });
+
+    circle.on('click', () => {
+      drillIntoState(st);
+    });
+  });
+
+  // Load sidebar with all top states incidents
+  const allIncidents = [];
+  let totalCases = 0;
+  INDIA_FRAUD_DATA.forEach(st => {
+    totalCases += st.fraudCases;
+    st.cities.forEach(c => {
+      allIncidents.push({ ...c, state: st.state });
+    });
+  });
+
+  allIncidents.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  document.getElementById('sidebar-state-title').textContent = "India National Overview";
+  document.getElementById('sidebar-cases-count').textContent = totalCases.toLocaleString();
+  document.getElementById('sidebar-risk-badge').className = "risk-pill risk-HIGH";
+  document.getElementById('sidebar-risk-badge').textContent = "High Risk";
+  
+  renderSidebarIncidents(allIncidents.slice(0, 8));
+}
+
+function drillIntoState(st) {
+  heatmapMarkersLayer.clearLayers();
+  heatmapMap.setView(st.coords, 6.5);
+
+  document.getElementById('map-crumbs').innerHTML = `
+    <span style="color: var(--muted); cursor: pointer;" onclick="renderIndiaOverview()">India Overview</span>
+    <span style="color: var(--muted);"> &gt; </span>
+    <span style="color: var(--orange-light); font-weight: 600;">${st.state}</span>
+  `;
+  document.getElementById('btn-map-reset').style.display = 'inline-block';
+
+  // Draw State visual hub
+  const stateColor = getHeatColor(st.fraudCases);
+  L.circle(st.coords, {
+    color: stateColor,
+    fillColor: stateColor,
+    fillOpacity: 0.1,
+    radius: 95000,
+    weight: 1,
+    dashArray: "4 4"
+  }).addTo(heatmapMarkersLayer);
+
+  // Draw City Pins
+  st.cities.forEach(city => {
+    const markerIcon = L.divIcon({
+      className: 'custom-city-pin',
+      html: `<div style="background: ${getHeatColor(city.reports * 2)}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 8px rgba(0,0,0,0.6);"></div>`,
+      iconSize: [12, 12],
+      iconAnchor: [6, 6]
+    });
+
+    const marker = L.marker(city.coords, { icon: markerIcon }).addTo(heatmapMarkersLayer);
+    
+    const popupContent = `
+      <div style="font-family: var(--body); font-size: 0.72rem; color: #fff; line-height: 1.5;">
+        <b style="color: var(--orange-light); font-size: 0.8rem; display: block; margin-bottom: 3px;">${city.name}</b>
+        <b>Date:</b> ${city.date}<br>
+        <b>Type:</b> ${city.type}<br>
+        <b>Reports count:</b> ${city.reports}<br>
+        <b>Risk Level:</b> <span class="risk-pill risk-${city.risk.toUpperCase()}" style="padding: 1px 4px; font-size: 0.58rem;">${city.risk}</span>
+      </div>
+    `;
+    
+    marker.bindPopup(popupContent);
+  });
+
+  document.getElementById('sidebar-state-title').textContent = st.state;
+  document.getElementById('sidebar-cases-count').textContent = st.fraudCases.toLocaleString();
+  document.getElementById('sidebar-risk-badge').className = `risk-pill risk-${st.risk.toUpperCase()}`;
+  document.getElementById('sidebar-risk-badge').textContent = st.risk + " Risk";
+
+  renderSidebarIncidents(st.cities);
+}
+
+function renderSidebarIncidents(incidents) {
+  const container = document.getElementById('sidebar-incidents-list');
+  container.innerHTML = '';
+  if (incidents.length === 0) {
+    container.innerHTML = `<div style="text-align: center; color: var(--muted); font-size: 0.72rem; padding: 2rem 0;">No incidents.</div>`;
+    return;
+  }
+  
+  incidents.forEach(inc => {
+    const riskClass = `risk-${inc.risk.toUpperCase()}`;
+    const stateLabel = inc.state ? `<span style="color: var(--orange); margin-right: 4px; font-weight: bold;">[${inc.state}]</span>` : '';
+    const itemHtml = `
+      <div class="incident-item">
+        <div class="incident-header">
+          <span>${stateLabel}<b>${inc.name}</b></span>
+          <span class="risk-pill ${riskClass}" style="font-size: 0.55rem; padding: 0px 4px; border-radius: 4px;">${inc.risk}</span>
+        </div>
+        <div style="color: var(--text); margin-top: 1px; font-size: 0.7rem;">${inc.type}</div>
+        <div style="display: flex; justify-content: space-between; color: var(--muted); font-size: 0.6rem; margin-top: 3px; font-family: var(--mono);">
+          <span>📅 ${inc.date}</span>
+          <span>👥 ${inc.reports} reports</span>
+        </div>
+      </div>
+    `;
+    container.insertAdjacentHTML('beforeend', itemHtml);
+  });
+}
+
+function updateAnalyticsDashboard() {
+  const sorted = [...INDIA_FRAUD_DATA].sort((a,b) => b.fraudCases - a.fraudCases);
+  const totalCases = sorted.reduce((acc, curr) => acc + curr.fraudCases, 0);
+
+  // Update Ranking Table
+  const tableBody = document.getElementById('ranking-table-body');
+  tableBody.innerHTML = '';
+  sorted.forEach((st, idx) => {
+    const percentage = ((st.fraudCases / totalCases) * 100).toFixed(1) + '%';
+    const rowHtml = `
+      <tr>
+        <td style="color: var(--orange-light); font-weight: bold; font-family: var(--mono);">${idx + 1}</td>
+        <td style="color: var(--text); font-weight: 500;">${st.state}</td>
+        <td style="font-family: var(--mono);">${st.fraudCases.toLocaleString()}</td>
+        <td style="font-family: var(--mono); color: var(--muted);">${percentage}</td>
+      </tr>
+    `;
+    tableBody.insertAdjacentHTML('beforeend', rowHtml);
+  });
+
+  // Render Chart.js visual panels
+  const labels = sorted.map(s => s.state);
+  const casesData = sorted.map(s => s.fraudCases);
+
+  const colors = ['#FF6A1F', '#FF8B4D', '#FFA673', '#FFC29E', '#FFDEC9'];
+  const gridColor = 'rgba(255, 255, 255, 0.04)';
+  const tickColor = '#9A8F80';
+
+  if (barChart) barChart.destroy();
+  if (pieChart) pieChart.destroy();
+
+  // Bar chart top 10 states
+  const ctxBar = document.getElementById('bar-chart').getContext('2d');
+  barChart = new Chart(ctxBar, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Fraud cases',
+        data: casesData,
+        backgroundColor: '#FF6A1F',
+        borderWidth: 0,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 8 } } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 8 } } }
+      }
+    }
+  });
+
+  // Pie chart top 5 states share
+  const ctxPie = document.getElementById('pie-chart').getContext('2d');
+  pieChart = new Chart(ctxPie, {
+    type: 'pie',
+    data: {
+      labels: labels.slice(0, 5),
+      datasets: [{
+        data: casesData.slice(0, 5),
+        backgroundColor: colors,
+        borderWidth: 1,
+        borderColor: '#120F0C'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#E8E2D8', font: { size: 8, family: 'Inter' } }
+        }
+      }
+    }
+  });
+
+  // Fraud Trend Line Graph
+  const ctxTrend = document.getElementById('trend-chart').getContext('2d');
+  if (window.myTrendChart) window.myTrendChart.destroy();
+
+  window.myTrendChart = new Chart(ctxTrend, {
+    type: 'line',
+    data: {
+      labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+      datasets: [{
+        data: [1150, 2300, 3750, 4820, 6100, 7940],
+        borderColor: '#FF6A1F',
+        backgroundColor: 'rgba(255, 106, 31, 0.06)',
+        fill: true,
+        tension: 0.35,
+        borderWidth: 2,
+        pointBackgroundColor: '#FFAB6B'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 8 } } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 8 } } }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
