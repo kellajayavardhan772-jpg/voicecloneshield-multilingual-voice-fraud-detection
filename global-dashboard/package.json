@@ -1,0 +1,13 @@
+{
+  "name": "voiceclone-shield-global-dashboard",
+  "version": "2.0.0",
+  "description": "Orchestrates build and deployment for the Global AI Voice Fraud Intelligence Dashboard",
+  "main": "backend/server.js",
+  "scripts": {
+    "install-backend": "cd backend && npm install",
+    "install-frontend": "cd frontend && npm install",
+    "build-frontend": "cd frontend && npm run build",
+    "build": "npm run install-backend && npm run install-frontend && npm run build-frontend",
+    "start": "cd backend && node server.js"
+  }
+}

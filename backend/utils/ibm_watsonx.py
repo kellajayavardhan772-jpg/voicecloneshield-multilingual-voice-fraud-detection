@@ -104,7 +104,7 @@ def generate_compliance_report(
     action = "BLOCK" if clone_prob > 0.72 else "CHALLENGE" if clone_prob > 0.45 else "ALLOW"
     return {
         "report_id":   f"VCS-{session_id[:8].upper()}",
-        "timestamp":   datetime.datetime.utcnow().isoformat() + "Z",
+        "timestamp":   datetime.datetime.now(datetime.UTC).isoformat() + "Z",
         "system":      "VoiceClone Shield v2.0 | IBM Watsonx AI",
         "verdict":     verdict,
         "clone_prob":  round(clone_prob, 4),

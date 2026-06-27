@@ -6,7 +6,7 @@ import AnalyticsPanel from './components/AnalyticsPanel';
 import PredictionPanel from './components/PredictionPanel';
 import IncidentFeed from './components/IncidentFeed';
 
-const socket = io('http://localhost:5000');
+const socket = io(window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
 
 function App() {
   const [activeTab, setActiveTab] = useState('map');

@@ -55,7 +55,7 @@ class TestVoiceCloneDetector:
         mel1  = torch.randn(1, 128, 500)
         mfcc1 = torch.randn(1, 120, 500)
         _, probs = self.model(mel1, mfcc1)
-        assert 0.0 <= float(probs[0, 1]) <= 1.0
+        assert 0.0 <= float(probs[0, 1].detach()) <= 1.0
 
     def test_different_time_lengths(self):
         for T in [200, 500, 800]:

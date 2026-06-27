@@ -3,10 +3,15 @@ import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { connectDb, USE_MOCK, mockDb } from './db.js';
 import { generateData } from './seeder.js';
 import router from './routes.js';
 import { Country, State, District, City, Incident } from './models.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -24,6 +29,18 @@ app.use(express.json());
 
 // API Base Router
 app.use('/api', router);
+
+// Serve static built frontend in production
+if (process.env.NODE_ENV === 'production') {
+  const distPath = path.join(__dirname, '../frontend/dist');
+  app.use(express.static(distPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
+      return next();
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 // Serve simple health endpoint
 app.get('/health', (req, res) => {

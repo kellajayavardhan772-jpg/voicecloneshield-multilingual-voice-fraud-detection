@@ -191,6 +191,23 @@ CNN Branch     BiLSTM Branch
 
 ---
 
+## ☁️ Deployment Instructions (Render Blueprint)
+
+This project is pre-configured with a Render Blueprint specification (`render.yaml`). You can deploy the entire stack (FastAPI Backend, Streamlit frontend, and the Node/React Global Dashboard) with a single click.
+
+### Steps to Deploy:
+1. Push this repository to GitHub/GitLab.
+2. Go to [Render Dashboard](https://dashboard.render.com/).
+3. Click **New +** and select **Blueprint**.
+4. Connect your GitHub repository.
+5. Render will automatically detect `render.yaml` and initialize all 3 services:
+   - **FastAPI API & Static HTML UI** (`voicecloneshield-api`): Serves both the JSON API endpoints and the full interactive HTML web UI.
+   - **Streamlit Frontend** (`voicecloneshield-streamlit`): Serves the Streamlit web dashboard.
+   - **Global Dashboard** (`voicecloneshield-dashboard`): Serves the multi-level real-time Socket.IO mapping intelligence dashboard.
+6. (Optional) Set your IBM Watsonx API keys in the Environment variables of the API service.
+
+---
+
 ## 👤 Author
 **Kella Jayavardhan** | Roll: 24L31A5481
 Vignan's Institute of Information Technology, Visakhapatnam

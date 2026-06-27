@@ -227,7 +227,10 @@ def serve_ui():
 
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", os.environ.get("BACKEND_PORT", 8000)))
+    host = os.environ.get("BACKEND_HOST", "0.0.0.0")
+    reload = False if os.environ.get("PORT") else True
     uvicorn.run("backend.main:app",
-                host=os.getenv("BACKEND_HOST", "0.0.0.0"),
-                port=int(os.getenv("BACKEND_PORT", 8000)),
-                reload=True)
+                host=host,
+                port=port,
+                reload=reload)

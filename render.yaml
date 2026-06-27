@@ -1,0 +1,42 @@
+services:
+  # 1. FastAPI API Backend & HTML Interface
+  - type: web
+    name: voicecloneshield-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: CLONE_THRESHOLD
+        value: 0.72
+      - key: LIVENESS_THRESHOLD
+        value: 0.45
+      - key: SIMILARITY_THRESHOLD
+        value: 0.85
+      - key: MODEL_CHECKPOINT
+        value: backend/training/checkpoints/best_model.pt
+
+  # 2. Streamlit Frontend
+  - type: web
+    name: voicecloneshield-streamlit
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: API_URL
+        fromService:
+          name: voicecloneshield-api
+          type: web
+          property: host
+
+  # 3. Global Dashboard (Node.js & React/Vite)
+  - type: web
+    name: voicecloneshield-dashboard
+    env: node
+    rootDir: global-dashboard
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000

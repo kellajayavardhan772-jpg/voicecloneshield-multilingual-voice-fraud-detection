@@ -12,7 +12,14 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-API = "http://localhost:8000/api/v1"
+import os
+API_BASE = os.getenv("API_URL", "http://localhost:8000")
+if API_BASE.endswith("/api/v1"):
+    API = API_BASE
+elif API_BASE.endswith("/"):
+    API = f"{API_BASE}api/v1"
+else:
+    API = f"{API_BASE}/api/v1"
 
 
 with st.sidebar:
