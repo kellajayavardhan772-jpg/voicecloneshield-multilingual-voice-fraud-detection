@@ -112,7 +112,19 @@ streamlit run frontend/app.py
 # Dashboard: http://localhost:8501
 ```
 
-### 8. Run tests
+### 8. Run global dashboard
+The project includes a root-level `package.json` utilizing npm workspaces to orchestrate the Node/Express backend and React/Vite frontend. Run the following from the root directory:
+```bash
+# Install and build dashboard frontend assets
+npm install
+npm run build
+
+# Start the Node/Express backend
+npm start
+# Dashboard URL: http://localhost:5000
+```
+
+### 9. Run tests
 ```bash
 pytest tests/ -v
 ```
