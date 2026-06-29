@@ -1,8 +1,10 @@
 
+# pyrefly: ignore [missing-import]
 import streamlit as st
 import requests
 import json
 import time
+# pyrefly: ignore [missing-import]
 import plotly.graph_objects as go
 
 st.set_page_config(
@@ -13,7 +15,17 @@ st.set_page_config(
 )
 
 import os
-API_BASE = os.getenv("API_URL", "http://localhost:8000")
+API_HOST = os.getenv("API_HOST")
+API_PORT = os.getenv("API_PORT")
+
+if API_HOST:
+    port_str = f":{API_PORT}" if API_PORT else ""
+    API_BASE = f"http://{API_HOST}{port_str}"
+else:
+    API_BASE = os.getenv("API_URL", "http://localhost:8000")
+    if API_BASE and not API_BASE.startswith(("http://", "https://")):
+        API_BASE = f"http://{API_BASE}"
+
 if API_BASE.endswith("/api/v1"):
     API = API_BASE
 elif API_BASE.endswith("/"):
