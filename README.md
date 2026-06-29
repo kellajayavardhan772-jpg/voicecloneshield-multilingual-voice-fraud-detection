@@ -4,6 +4,14 @@
 
 ---
 
+## 🌐 Live Deployment Links
+* **Streamlit Web UI (Frontend):** [https://voicecloneshield-streamlit-wx03.onrender.com](https://voicecloneshield-streamlit-wx03.onrender.com)
+* **FastAPI Backend (API & Docs):** [https://voicecloneshield-api-wx03.onrender.com](https://voicecloneshield-api-wx03.onrender.com)
+* **API Swagger Documentation:** [https://voicecloneshield-api-wx03.onrender.com/docs](https://voicecloneshield-api-wx03.onrender.com/docs)
+* **Global Dashboard (Telemetry Map):** [https://voicecloneshield-dashboard-wx03.onrender.com](https://voicecloneshield-dashboard-wx03.onrender.com)
+
+---
+
 ## ❌ Why v1.0 Was Inaccurate (and what we fixed)
 
 | Problem | Old Dataset | New Dataset |
