@@ -1,0 +1,16 @@
+{
+  "name": "voicecloneshield-multilingual-voice-fraud-detection",
+  "version": "2.0.0",
+  "description": "Root package manager for VoiceClone Shield, routing commands to the Global Dashboard",
+  "scripts": {
+    "postinstall": "cd global-dashboard && npm install",
+    "build": "cd global-dashboard && npm run build",
+    "start": "cd global-dashboard && npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kellajayavardhan772-jpg/voicecloneshield-multilingual-voice-fraud-detection.git"
+  },
+  "author": "Kella Jayavardhan",
+  "license": "ISC"
+}

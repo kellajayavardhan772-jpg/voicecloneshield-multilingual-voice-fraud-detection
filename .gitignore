@@ -36,3 +36,10 @@ C:/Desktop/vcs_train/checkpoints/
 # Local test audios
 test_audio/
 test_genuine_voice.wav
+
+# Node dependencies and build output
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+
